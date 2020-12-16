@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "esri": {
+    "angular-cli-esri-map": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/esri",
+            "outputPath": "dist/angular-cli-esri-map",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -25,9 +25,11 @@
             "aot": true,
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              "src/resources"
             ],
             "styles": [
+              "node_modules/bootstrap/scss/bootstrap.scss",
               "src/styles.scss"
             ],
             "scripts": []
@@ -43,6 +45,7 @@
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
+              "extractCss": true,
               "namedChunks": false,
               "extractLicenses": true,
               "vendorChunk": false,
@@ -65,18 +68,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "esri:build"
+            "browserTarget": "angular-cli-esri-map:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "esri:build:production"
+              "browserTarget": "angular-cli-esri-map:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "esri:build"
+            "browserTarget": "angular-cli-esri-map:build"
           }
         },
         "test": {
@@ -88,7 +91,8 @@
             "karmaConfig": "karma.conf.js",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              "src/resources"
             ],
             "styles": [
               "src/styles.scss"
@@ -113,16 +117,15 @@
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
             "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "esri:serve"
+            "devServerTarget": "angular-cli-esri-map:serve"
           },
           "configurations": {
             "production": {
-              "devServerTarget": "esri:serve:production"
+              "devServerTarget": "angular-cli-esri-map:serve:production"
             }
           }
         }
       }
-    }
-  },
-  "defaultProject": "esri"
+    }},
+  "defaultProject": "angular-cli-esri-map"
 }

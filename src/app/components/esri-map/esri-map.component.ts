@@ -7,20 +7,16 @@ import {
   Input,
   Output,
   EventEmitter,
-  OnDestroy
+  OnDestroy,
+  Query
 } from "@angular/core";
 
 import { loadModules } from "esri-loader";
 import esri = __esri; // Esri TypeScript Types
 import { Guid } from 'typescript-guid';
-// import { IFlightRecord } from '../Interfaces/IFlightRecord';
-// import { ISnapShotRecord } from '../Interfaces/ISnapShotRecord';
-import { ICsvRec } from '../interfaces/ICsvRec';
-import { LineSymbol3D } from 'esri/symbols';
-
-// import { stringify } from 'querystring';
-// import { filter } from 'esri/core/promiseUtils';
-// import { Server } from 'http';
+import { CsvRec } from '../../models/CsvRec';
+import { IOptions } from '../../interfaces/IOptions';
+import { all } from 'esri/smartMapping/symbology/support/colorRamps';
 
 @Component({
   selector: "app-esri-map",
@@ -65,14 +61,16 @@ export class EsriMapComponent implements OnInit, OnDestroy {
   async initializeMap() {
     try {
       // Load the modules for the ArcGIS API for JavaScript
-      const [EsriMap, EsriMapView, FeatureLayer, KmlLayer, CSVLayer, FeatureFilter, TimeSlider] = await loadModules([
+      const [EsriMap, EsriMapView, FeatureLayer, KmlLayer, CSVLayer, FeatureFilter, TimeSlider, FeatureSet, Query] = await loadModules([
         "esri/Map",
         "esri/views/MapView",
         "esri/layers/FeatureLayer",
         "esri/layers/KMLLayer",
         "esri/layers/CSVLayer",
         "esri/views/layers/support/FeatureFilter",
-        "esri/widgets/TimeSlider"
+        "esri/widgets/TimeSlider",
+        "esri/tasks/support/FeatureSet",
+        "esri/tasks/support/Query"
       ]);
 
       this._map = new EsriMap({ basemap: this._basemap } as esri.MapProperties);
@@ -90,7 +88,7 @@ export class EsriMapComponent implements OnInit, OnDestroy {
             timestamp: parseInt(myMatches[2]),
             latitude: myMatches[3],
             longitude: myMatches[4]
-          } as ICsvRec
+          } as CsvRec
         })
         .filter(f => f && f.timestamp)
       )
@@ -199,10 +197,33 @@ export class EsriMapComponent implements OnInit, OnDestroy {
     }
   }
 
-  filterByText(selectedText: string): void {
-  }
+  calculateNeighbors(options: IOptions): void {
+    // Experimental client-side stuff
+    this._featLayerView.queryFeatures()
+    .then((results: esri.FeatureSet) => {
+      console.log('All Displayed Features Query Results: ', results);
 
-  filterByCats(selectedCats: Array<any>): void {
+      return results.features.map(d => {
+        // Create a query for every displayed feature on the map
+        const query: esri.Query = this._featLayerView.layer.createQuery();
+        query.geometry = d.geometry;
+        query.distance = 30;
+        query.units = "feet";
+        return query;
+      })
+    })
+    .then((queryObjs: Array<esri.Query>) => {
+      // Now create a PromiseAll based on the array of queries we just built
+      //  and once they have all resolved, do some spiffy filterting... not
+      //  sure this really works right now
+      Promise.all(queryObjs.map(m => this._featLayerView.queryFeatures(m)))
+        .then((allResults: Array<esri.FeatureSet>) => allResults.map(m => m.features))
+        .then((allFeats: Array<Array<esri.Graphic>>) => allFeats.filter(f => f.length > 1))
+        .then((filtered: Array<Array<esri.Graphic>>) => filtered.map(m => m.filter(f => f.visible)))
+        .then(filtered => {
+          console.log('All Queries Filtered Results: ', filtered)
+        })
+    });
   }
 
   ngOnInit() {

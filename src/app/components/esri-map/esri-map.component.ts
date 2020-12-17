@@ -86,8 +86,8 @@ export class EsriMapComponent implements OnInit, OnDestroy {
           return {
             pointName: myMatches[1],
             timestamp: parseInt(myMatches[2]),
-            latitude: myMatches[3],
-            longitude: myMatches[4]
+            longitude: myMatches[3],
+            latitude: myMatches[4]
           } as CsvRec
         })
         .filter(f => f && f.timestamp)
@@ -95,7 +95,7 @@ export class EsriMapComponent implements OnInit, OnDestroy {
       .then(data => data.map(d => {
         // Create geometry for the items in our list
         return {
-          geometry: { type: "point", x: d.latitude, y: d.longitude },
+          geometry: { type: "point", x: d.longitude, y: d.latitude },
           symbol: { type: "simple-marker", color: [226, 119, 40] },
           attributes: {
             ObjectID: Guid.create().toString(),

@@ -23,7 +23,11 @@ export class OptionsComponent implements OnInit, OnDestroy {
   calculateNeighbors:EventEmitter<IOptions> = new EventEmitter<IOptions>();
   
   btnClickCalcNeighbors(): void {
-    this.calculateNeighbors.emit({} as IOptions);
+    this.calculateNeighbors.emit({
+      neighborRadius: 30,
+      neighborUnit: 'feet',
+      neighborRelationship: 'intersects'
+    } as IOptions);
   }
 
   ngOnInit() {

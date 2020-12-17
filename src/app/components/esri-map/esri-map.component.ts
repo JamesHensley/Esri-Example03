@@ -81,16 +81,14 @@ export class EsriMapComponent implements OnInit, OnDestroy {
       .then(data => data
         .map(d => {
           const myMatches = d.match(/(\w*)\D*(\d+)\D*(\d+\.\d+)\D*(\d+\.\d+)/);
-          if(!myMatches || myMatches.length != 5) { return null; }
-
-          return {
+          return myMatches ? {
             pointName: myMatches[1],
             timestamp: parseInt(myMatches[2]),
             longitude: myMatches[3],
             latitude: myMatches[4]
-          } as CsvRec
+          } as CsvRec : null;
         })
-        .filter(f => f && f.timestamp)
+        .filter(f => f && f.pointName && f.longitude && f.latitude)
       )
       .then(data => data.map(d => {
         // Create geometry for the items in our list
@@ -101,16 +99,15 @@ export class EsriMapComponent implements OnInit, OnDestroy {
             ObjectID: Guid.create().toString(),
             title: d.timestamp.toString(),
             pointName: d.pointName,
-            latitude: String(d.latitude),
-            longitude: String(d.longitude),
+            latitude: d.latitude,
+            longitude: d.longitude,
             timestamp: d.timestamp * 1000
           }
         }
       }))
       .then(data => data.sort((a, b) => a.attributes.timestamp - b.attributes.timestamp))
       .then(data => {
-        console.log('Objects to map: ', data);
-
+        // console.log('Objects to map: ', data);
         this._featLayer = new FeatureLayer({
           title: 'Flight Layer',
           refreshInterval: 5,
@@ -161,8 +158,7 @@ export class EsriMapComponent implements OnInit, OnDestroy {
           }
         });
         this._map.add(this._featLayer);
-
-        console.log('Feat Layer: ', this._featLayer);
+        // console.log('Feat Layer: ', this._featLayer);
       });
 
 
@@ -207,8 +203,11 @@ export class EsriMapComponent implements OnInit, OnDestroy {
         // Create a query for every displayed feature on the map
         const query: esri.Query = this._featLayerView.layer.createQuery();
         query.geometry = d.geometry;
-        query.distance = 30;
-        query.units = "feet";
+        query.distance = options.neighborRadius;
+        query.units = options.neighborUnit;
+        query.spatialRelationship = options.neighborRelationship;
+        query.returnGeometry = true;
+        query.outFields = ["*"];
         return query;
       })
     })
@@ -221,7 +220,7 @@ export class EsriMapComponent implements OnInit, OnDestroy {
         .then((allFeats: Array<Array<esri.Graphic>>) => allFeats.filter(f => f.length > 1))
         .then((filtered: Array<Array<esri.Graphic>>) => filtered.map(m => m.filter(f => f.visible)))
         .then(filtered => {
-          console.log('All Queries Filtered Results: ', filtered)
+          console.log('EsriMapComponent.calculateNeighbors -> Query Results: ', filtered)
         })
     });
   }

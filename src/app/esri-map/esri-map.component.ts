@@ -82,13 +82,14 @@ export class EsriMapComponent implements OnInit, OnDestroy {
       .then(data => data.split('\r\n'))
       .then(data => data
         .map(d => {
-          const myMatches = d.match(/(\d+)\D*(\d+\.\d+)\D*(\d+\.\d+)/);
-          if(!myMatches || myMatches.length != 4) { return null; }
+          const myMatches = d.match(/(\w*)\D*(\d+)\D*(\d+\.\d+)\D*(\d+\.\d+)/);
+          if(!myMatches || myMatches.length != 5) { return null; }
 
           return {
-            timestamp: parseInt(myMatches[1]),
-            latitude: myMatches[2],
-            longitude: myMatches[3]
+            pointName: myMatches[1],
+            timestamp: parseInt(myMatches[2]),
+            latitude: myMatches[3],
+            longitude: myMatches[4]
           } as ICsvRec
         })
         .filter(f => f && f.timestamp)
@@ -101,6 +102,7 @@ export class EsriMapComponent implements OnInit, OnDestroy {
           attributes: {
             ObjectID: Guid.create().toString(),
             title: d.timestamp.toString(),
+            pointName: d.pointName,
             latitude: String(d.latitude),
             longitude: String(d.longitude),
             timestamp: d.timestamp * 1000
@@ -118,6 +120,7 @@ export class EsriMapComponent implements OnInit, OnDestroy {
           fields: [
             { name: "ObjectID", alias: "ObjectID", type: "oid" },
             { name: "title", alias: "title", type: "string" },
+            { name: "pointName", alias: "pointName", type: "string" },
             { name: "latitude", alias: "Latitude", type: "string" },
             { name: "longitude", alias: "Longitude", type: "string" },
             { name: "timestamp", alias: "timestamp", type: "date" }
@@ -135,10 +138,12 @@ export class EsriMapComponent implements OnInit, OnDestroy {
             }
           },
           popupTemplate: {
-            title: "{timestamp}",
+            title: "{pointName} {timestamp}",
             content: [{
               type: "fields",
               fieldInfos: [
+                { fieldName: "pointName", label: "pointName", visible: true },
+                { fieldName: "Latitude", label: "Latitude", visible: true },
                 { fieldName: "Latitude", label: "Latitude", visible: true },
                 { fieldName: "Longitude", label: "Longitude", visible: true },
                 { fieldName: "timestamp", label: "timestamp", visible: true }
